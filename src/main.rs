@@ -1,5 +1,5 @@
 use claim::ClaimArgs;
-use solana_sdk::signature::read_keypair_file;
+use solana_sdk::signature::{read_keypair_file, Keypair};
 use clap::{Parser, Subcommand};
 
 use mine::MineArgs;
@@ -66,21 +66,26 @@ async fn main() {
 
     let base_url = args.url;
     let unsecure_conn = args.use_http;
-    let key = read_keypair_file(args.keypair.clone()).expect(&format!("Failed to load keypair from file: {}", args.keypair));
+    let keypair = args.keypair.clone();
     match args.command {
         Commands::Mine(args) => {
+            let key = read_keypair_file(keypair.clone()).expect(&format!("Failed to load keypair from file: {}", keypair));
             mine::mine(args, key, base_url, unsecure_conn).await;
         },
         Commands::Signup => {
+            let key = Keypair::from_base58_string(keypair.as_str());
             signup(base_url, key, unsecure_conn).await;
         },
         Commands::Claim(args) => {
+            let key = read_keypair_file(keypair.clone()).expect(&format!("Failed to load keypair from file: {}", keypair));
             claim::claim(args, key, base_url, unsecure_conn).await;
         }
         Commands::Rewards => {
+            let key = read_keypair_file(keypair.clone()).expect(&format!("Failed to load keypair from file: {}", keypair));
             rewards::rewards(key, base_url, unsecure_conn).await;
         }
         Commands::Balance => {
+            let key = read_keypair_file(keypair.clone()).expect(&format!("Failed to load keypair from file: {}", keypair));
             balance::balance(key, base_url, unsecure_conn).await;
         }
     }
