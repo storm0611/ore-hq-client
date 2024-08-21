@@ -1,7 +1,7 @@
 use std::{ops::{ControlFlow, Range}, sync::Arc, time::{Duration, Instant, SystemTime, UNIX_EPOCH}};
 
 use clap::{arg, Parser};
-use drillx::equix;
+use drillx_2::equix;
 use futures_util::{SinkExt, StreamExt};
 use solana_sdk::{signature::Keypair, signer::Signer};
 use tokio::sync::{mpsc::UnboundedSender, Mutex};
@@ -147,12 +147,12 @@ pub async fn mine(args: MineArgs, key: Keypair, url: String, unsecure: bool) {
                                             let mut nonce = first_nonce;
                                             let mut best_nonce = nonce;
                                             let mut best_difficulty = 0;
-                                            let mut best_hash = drillx::Hash::default();
+                                            let mut best_hash = drillx_2::Hash::default();
                                             let mut total_hashes: u64 = 0;
 
                                             loop {
                                                 // Create hash
-                                                if let Ok(hx) = drillx::hash_with_memory(&mut memory, &challenge, &nonce.to_le_bytes()) {
+                                                for hx in  drillx_2::get_hashes_with_memory(&mut memory, &challenge, &nonce.to_le_bytes()) {
                                                     total_hashes += 1;
                                                     let difficulty = hx.difficulty();
                                                     if difficulty.gt(&best_difficulty) {
@@ -190,7 +190,7 @@ pub async fn mine(args: MineArgs, key: Keypair, url: String, unsecure: bool) {
                                 // Join handles and return best nonce
                                 let mut best_nonce: u64 = 0;
                                 let mut best_difficulty = 0;
-                                let mut best_hash = drillx::Hash::default();
+                                let mut best_hash = drillx_2::Hash::default();
                                 let mut total_nonces_checked = 0;
                                 for h in handles {
                                     if let Ok(Some((nonce, difficulty, hash, nonces_checked))) = h.join() {
@@ -208,6 +208,7 @@ pub async fn mine(args: MineArgs, key: Keypair, url: String, unsecure: bool) {
                             println!("Found best diff: {}", best_difficulty);
                             println!("Processed: {}", total_nonces_checked);
                             println!("Hash time: {:?}", hash_time);
+                            println!("Hashpower: {:?} H/s", total_nonces_checked.saturating_div(hash_time.as_secs()));
 
 
                             let message_type =  2u8; // 1 u8 - BestSolution Message
